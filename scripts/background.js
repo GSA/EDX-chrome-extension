@@ -1,6 +1,8 @@
+let results;
+
 chrome.tabs.onUpdated.addListener((tabId) => {
-  chrome.runtime.onMessage.addListener(function (results) {
-    const count = results.filter((res) => !res.result).length;
+  chrome.runtime.onMessage.addListener((data) => {
+    const count = data.filter((res) => !res).length;
 
     chrome.action.setBadgeBackgroundColor({
       tabId,
@@ -9,12 +11,16 @@ chrome.tabs.onUpdated.addListener((tabId) => {
     chrome.action.setBadgeTextColor({ tabId, color: "white" });
     chrome.action.setBadgeText({ tabId, text: count.toString() });
 
-    chrome.storage.local.set({ [tabId]: results });
+    results = data;
   });
 });
 
-chrome.action.onClicked.addListener(async (tab) => {
+chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.create({
-    url: chrome.runtime.getURL(`index.html?id=${tab.id}&url=${tab.url}`),
+    url: chrome.runtime.getURL(
+      `index.html?url=${encodeURIComponent(
+        tab.url
+      )}&results=${encodeURIComponent(JSON.stringify(results))}`
+    ),
   });
 });
