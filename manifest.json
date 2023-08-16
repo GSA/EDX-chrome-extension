@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "GSA EDX",
+  "version": "1.0",
+  "description": "Get guidance on meeting GSA IT Standards",
+  "icons": {
+    "16": "images/logo.png"
+  },
+  "content_scripts": [
+    {
+      "js": ["scripts/content.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {}
+}
