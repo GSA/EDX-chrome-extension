@@ -15,6 +15,12 @@
   "background": {
     "service_worker": "scripts/background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["rules.json"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "permissions": ["activeTab"],
   "action": {}
 }
