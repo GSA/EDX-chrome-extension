@@ -1,7 +1,7 @@
-const run = async () => {
+(async () => {
   const url = chrome.runtime.getURL("rules.json");
   const response = await fetch(url);
-  const jsonData = await response.json();
+  const config = await response.json();
 
   const urlParams = new URLSearchParams(window.location.search);
   const source = urlParams.get("url");
@@ -10,8 +10,8 @@ const run = async () => {
   if (results) {
     let string = "";
 
-    results
-      .sort((a, b) => a.test - b.test)
+    Object.entries(results)
+      .sort((a, b) => a[1] - b[1])
       .forEach(
         (rule, idx) =>
           (string += `
@@ -23,7 +23,7 @@ const run = async () => {
                 aria-controls="a${idx}"
               >
               ${
-                rule.test
+                rule[1]
                   ? `
                   <svg
                     class="usa-icon text-green margin-right-1"
@@ -45,15 +45,11 @@ const run = async () => {
                 </svg>
                `
               }
-              ${
-                rule.test
-                  ? jsonData[rule.id].title
-                  : jsonData[rule.id].failureTitle
-              }
+              ${rule[1] ? config[rule[0]].title : config[rule[0]].failureTitle}
               </button>
             </h4>
             <div id="a${idx}" class="usa-accordion__content usa-prose">
-              <p>${jsonData[rule.id].description}</p>
+              <p>${config[rule[0]].description}</p>
             </div>
         `)
       );
@@ -62,6 +58,4 @@ const run = async () => {
   }
 
   document.getElementById("url").innerHTML = source;
-};
-
-run();
+})();

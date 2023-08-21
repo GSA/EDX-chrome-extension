@@ -21,6 +21,7 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "webRequest"],
+  "host_permissions": ["<all_urls>"],
   "action": {}
 }
