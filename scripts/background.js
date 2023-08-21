@@ -1,37 +1,32 @@
 const results = {};
 
-async function getConfig() {
-  chrome.tabs.onCreated.addListener(() =>
-    fetch(
-      "https://raw.githubusercontent.com/GSA/EDX-chrome-extension/main/rules.json"
-    )
-      .then(async (res) => {
-        const config = await res.json();
+const getConfig = () =>
+  fetch(
+    "https://raw.githubusercontent.com/GSA/EDX-chrome-extension/main/rules.json"
+  )
+    .then(async (res) => {
+      const config = await res.json();
 
-        console.log("[EDX Chrome Extension] - Using remote rules.json");
+      console.log("[EDX Chrome Extension] - Using remote rules.json");
 
-        return config;
-      })
-      .catch(async (error) => {
-        const url = chrome.runtime.getURL("rules.json");
-        const response = await fetch(url);
-        const config = await response.json();
+      return config;
+    })
+    .catch(async (error) => {
+      const url = chrome.runtime.getURL("rules.json");
+      const response = await fetch(url);
+      const config = await response.json();
 
-        console.log("[EDX Chrome Extension] - Using local rules.json");
+      console.log("[EDX Chrome Extension] - Using local rules.json");
 
-        return config;
-      })
-  );
-}
+      return config;
+    });
 
 chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.create({
     url: chrome.runtime.getURL(
       `index.html?url=${encodeURIComponent(
         tab.url
-      )}&results=${encodeURIComponent(
-        JSON.stringify(Object.values(results)[0])
-      )}`
+      )}&results=${encodeURIComponent(JSON.stringify(results[tab.id]))}`
     ),
   });
 });
@@ -65,28 +60,21 @@ chrome.webRequest.onHeadersReceived.addListener(
     const config = await getConfig();
     const headers = details.responseHeaders;
 
-    if (config && headers) {
+    if (headers) {
       const rules = Object.values(config).filter(
         (rule) => rule.type === "header"
       );
 
-      const res = rules.map((rule) => {
-        return {
-          id: rule.id,
-          test: headers.some((header) => {
-            return rule.regex.some((regex) => {
-              return new RegExp(regex, "i").test(header.name.toLowerCase());
-            });
-          }),
-        };
-      });
-
       results[details.tabId] = {
         ...results[details.tabId],
-        ...res.reduce((result, item) => {
-          result[item.id] = item.test;
+        ...rules.reduce((accum, rule) => {
+          accum[rule.id] = headers.some((header) =>
+            rule.regex.some((regex) =>
+              new RegExp(regex, "i").test(header.name.toLowerCase())
+            )
+          );
 
-          return result;
+          return accum;
         }, {}),
       };
     }
