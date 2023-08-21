@@ -1,11 +1,27 @@
 const results = {};
 
 async function getConfig() {
-  const url = chrome.runtime.getURL("rules.json");
-  const response = await fetch(url);
-  const config = await response.json();
+  chrome.tabs.onCreated.addListener(() =>
+    fetch(
+      "https://raw.githubusercontent.com/GSA/EDX-chrome-extension/main/rules.json"
+    )
+      .then(async (res) => {
+        const config = await res.json();
 
-  return config;
+        console.log("[EDX Chrome Extension] - Using remote rules.json");
+
+        return config;
+      })
+      .catch(async (error) => {
+        const url = chrome.runtime.getURL("rules.json");
+        const response = await fetch(url);
+        const config = await response.json();
+
+        console.log("[EDX Chrome Extension] - Using local rules.json");
+
+        return config;
+      })
+  );
 }
 
 chrome.action.onClicked.addListener((tab) => {
@@ -49,7 +65,7 @@ chrome.webRequest.onHeadersReceived.addListener(
     const config = await getConfig();
     const headers = details.responseHeaders;
 
-    if (headers) {
+    if (config && headers) {
       const rules = Object.values(config).filter(
         (rule) => rule.type === "header"
       );
