@@ -5,8 +5,9 @@
   const page = document.documentElement.outerHTML;
 
   if (page)
-    chrome.runtime.sendMessage(
-      Object.values(config)
+    chrome.runtime.sendMessage({
+      type: "content",
+      payload: Object.values(config)
         .filter((rule) => rule.type === "content")
         .reduce((accum, item) => {
           accum[item.id] = item.regex.some((regex) =>
@@ -14,6 +15,6 @@
           );
 
           return accum;
-        }, {})
-    );
+        }, {}),
+    });
 })();

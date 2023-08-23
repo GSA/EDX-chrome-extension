@@ -1,5 +1,3 @@
-const results = {};
-
 const getConfig = () =>
   fetch(
     "https://raw.githubusercontent.com/GSA/EDX-chrome-extension/main/rules.json"
@@ -11,7 +9,7 @@ const getConfig = () =>
 
       return config;
     })
-    .catch(async (error) => {
+    .catch(async () => {
       const url = chrome.runtime.getURL("rules.json");
       const response = await fetch(url);
       const config = await response.json();
@@ -21,64 +19,78 @@ const getConfig = () =>
       return config;
     });
 
-chrome.action.onClicked.addListener((tab) => {
-  chrome.tabs.create({
-    url: chrome.runtime.getURL(
-      `index.html?url=${encodeURIComponent(
-        tab.url
-      )}&results=${encodeURIComponent(JSON.stringify(results[tab.id]))}`
-    ),
-  });
-});
+const getCurrentTab = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+};
 
-chrome.tabs.onRemoved.addListener((tabId) => {
-  if (results[tabId]) {
-    delete results[tabId];
-  }
-});
+(async () => {
+  const results = {};
+  const config = await getConfig();
 
-chrome.tabs.onUpdated.addListener((tabId) => {
-  chrome.runtime.onMessage.addListener((data) => {
-    const res = Object.values(data).filter((value) => !value);
-
-    chrome.action.setBadgeBackgroundColor({
-      tabId,
-      color: res.length > 0 ? "red" : "green",
+  chrome.action.onClicked.addListener((tab) => {
+    chrome.tabs.create({
+      url: chrome.runtime.getURL(
+        `index.html?url=${encodeURIComponent(
+          tab.url
+        )}&results=${encodeURIComponent(JSON.stringify(results[tab.id]))}`
+      ),
     });
-    chrome.action.setBadgeTextColor({ tabId, color: "white" });
-    chrome.action.setBadgeText({ tabId, text: res.length.toString() });
-
-    results[tabId] = {
-      ...results[tabId],
-      ...data,
-    };
   });
-});
 
-chrome.webRequest.onHeadersReceived.addListener(
-  async (details) => {
-    const config = await getConfig();
-    const headers = details.responseHeaders;
+  chrome.runtime.onMessage.addListener(async (data) => {
+    if (data.type === "content") {
+      const tab = await getCurrentTab();
+      const tabId = tab.id;
 
-    if (headers) {
-      const rules = Object.values(config).filter(
-        (rule) => rule.type === "header"
-      );
-
-      results[details.tabId] = {
-        ...results[details.tabId],
-        ...rules.reduce((accum, rule) => {
-          accum[rule.id] = headers.some((header) =>
-            rule.regex.some((regex) =>
-              new RegExp(regex, "i").test(header.name.toLowerCase())
-            )
-          );
-
-          return accum;
-        }, {}),
+      results[tabId] = {
+        ...results[tabId],
+        ...data.payload,
       };
+
+      const count = Object.values(results[tabId]).filter((v) => !v).length;
+
+      chrome.action.setBadgeBackgroundColor({
+        tabId,
+        color: count > 0 ? "red" : "green",
+      });
+      chrome.action.setBadgeTextColor({ tabId, color: "white" });
+      chrome.action.setBadgeText({ tabId, text: count.toString() });
     }
-  },
-  { types: ["main_frame"], urls: ["<all_urls>"] },
-  ["responseHeaders"]
-);
+  });
+
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    if (results[tabId]) {
+      delete results[tabId];
+    }
+  });
+
+  chrome.webRequest.onHeadersReceived.addListener(
+    async (details) => {
+      const headers = details.responseHeaders;
+
+      if (headers) {
+        const rules = Object.values(config).filter(
+          (rule) => rule.type === "header"
+        );
+
+        results[details.tabId] = {
+          ...results[details.tabId],
+          ...rules.reduce((accum, rule) => {
+            accum[rule.id] = headers.some((header) =>
+              rule.regex.some((regex) =>
+                new RegExp(regex, "i").test(header.name.toLowerCase())
+              )
+            );
+
+            return accum;
+          }, {}),
+        };
+      }
+    },
+    { types: ["main_frame"], urls: ["<all_urls>"] },
+    ["responseHeaders"]
+  );
+})();
