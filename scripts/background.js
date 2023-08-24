@@ -31,13 +31,15 @@ const getCurrentTab = async () => {
   const config = await getConfig();
 
   chrome.action.onClicked.addListener((tab) => {
-    chrome.tabs.create({
-      url: chrome.runtime.getURL(
-        `index.html?url=${encodeURIComponent(
-          tab.url
-        )}&results=${encodeURIComponent(JSON.stringify(results[tab.id]))}`
-      ),
-    });
+    if (results[tab.id]) {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL(
+          `index.html?url=${encodeURIComponent(
+            tab.url
+          )}&results=${encodeURIComponent(JSON.stringify(results[tab.id]))}`
+        ),
+      });
+    }
   });
 
   chrome.runtime.onMessage.addListener(async (data) => {
