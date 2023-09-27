@@ -23,7 +23,7 @@
     "failureTitle": "Site does not include an accessibility link",
     "description": "By default, sites should link to GSA's master Accessibility policy statement. In the event that a site requires something different, we can update our scanner to ensure proper credit.",
     "regex": [
-      "website-information/accessibility-aids|website-information/website-policies|portal/content/116609"
+      "website-information/accessibility-aids|website-information/website-policies|portal/content/116609|website-information/accessibility-statement"
     ],
     "type": "content"
   },
@@ -42,7 +42,9 @@
     "title": "Site includes an FOIA link",
     "failureTitle": "Site does not include an FOIA link",
     "description": "All sites should link to GSA.gov's page regarding Freedom of Information Act requests.",
-    "regex": ["reference/freedom-of-information-act-foia|/node80729"],
+    "regex": [
+      "reference/freedom-of-information-act-foia|/node80729|/omb/freedom-of-information-act-foia"
+    ],
     "type": "content"
   },
   "link-privacy": {
@@ -51,7 +53,7 @@
     "failureTitle": "Site does not include a privacy link",
     "description": "By default, sites should link to GSA's master Privacy policy statement. Most GSA sites are covered by this privacy policy. However, in the event that GSA's Chief Privacy Officer determines a distinct statement, we can update our scanner to ensure proper credit.",
     "regex": [
-      "website-information/website-policies|website-information/privacy-and-security-notice|portal/content/116609",
+      "website-information/website-policies|website-information/privacy-and-security-notice|portal/content/116609|/privacy-and-security",
       "<a.*?>(Privacy Policy|Privacy).*?</a>"
     ],
     "type": "content"
@@ -62,7 +64,7 @@
     "failureTitle": "Site does not include the ability to search",
     "description": "A search option shall be present on all pages within a site. USWDS offers handy templates for a header containing search or a stand alone search component. There are a number of options for including search on the site whether it be native capabilities within the existing website platform or using search.gov. Sites that only present a single page to the public and require authentication before doing anything are exempt from this requirement. A good example of this would be https://www.fairs.reporting.gov/FAIRS/s/login/",
     "regex": [
-      "https://search.usa.gov/search|https://search.gsa.gov/search|<label.*?>.*?Search.*?</label>|placeholder=('|\")Search|aria-label=\"search.*\"|type=\"search"
+      "https://search.usa.gov/search|https://search.gsa.gov/search|<label.*?>.*?Search.*?</label>|placeholder=('|\")Search|aria-label=\"search.*\"|type=\"search\"|id=\"searchtext\"|id=\"indicator_search\"|id=\"searchbox\""
     ],
     "type": "content"
   },
